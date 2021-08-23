@@ -7,6 +7,7 @@ import "./interfaces/IGovernance.sol";
 import "hardhat/console.sol";
 
 contract Treasury is TellorVars{
+    // Storage
     uint256 public totalLocked;
     uint256 public treasuryCount;
     mapping(uint => TreasuryDetails) public treasury;
@@ -32,13 +33,21 @@ contract Treasury is TellorVars{
     event TreasuryIssued(uint256 _id,uint256 _amount,uint256 _rate);
     event TreasuryPaid(address _investor, uint256 _amount);
     event TreasuryPurchased(address _investor,uint256 _amount);
-
-    function buyTreasury(uint256 _id,uint256 _amount) external{
-        //deposit money into a Treasury
+    
+    // Functions
+    /**
+     * @dev This is an external function that is used to deposit money into a treasury.
+     * @param _id is the ID for a specific treasury instance
+     * @param _amount is the amount to deposit into a treasury
+    */
+    function buyTreasury(uint256 _id,uint256 _amount) external {
+        // Transfer sender funds to Treasury
         require(IController(TELLOR_ADDRESS).approveAndTransferFrom(msg.sender,address(this),_amount));
         treasuryFundsByUser[msg.sender]+=_amount;
+        // Check for sufficient treasury funds
         TreasuryDetails storage _treas = treasury[_id];
-        require(_amount <= _treas.totalAmount - _treas.purchased);
+        require(_amount <= _treas.totalAmount - _treas.purchased, "Not enough money in treasury left to purchase.");
+        // Update treasury details -- vote count, purchased, amount, and owners
         address governanceContract = IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT);
         _treas.accounts[msg.sender].startVoteCount = IGovernance(governanceContract).getVoteCount();
         _treas.purchased += _amount;
@@ -48,14 +57,27 @@ contract Treasury is TellorVars{
         emit TreasuryPurchased(msg.sender,_amount);
     }
 
-    function delegateVotingPower(address _delegate) external{
-        require(msg.sender == IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT));
+    /**
+     * @dev This is an external function that is used to delegate voting rights from one TRB holder to another.
+     * Note that only the governance contract can call this function.
+     * @param _delegate is the address that the sender gives voting rights to
+    */
+    function delegateVotingPower(address _delegate) external {
+        require(msg.sender == IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT), "Only governance contract is allowed to delegate voting power.");
         IGovernance(msg.sender).delegate(_delegate);
     }
 
     //_amount of TRB, _rate in bp
+    /**
+     * @dev This is an external function that is used to issue a new treasury.
+     * Note that only the governance contract can call this function.
+     * @param _amount is the amount of total TRB that treasury stores
+     * @param _rate is the treasury's interest rate in BP
+     * @param _duration is the amount of time the treasury locks participants
+    */
     function issueTreasury(uint256 _totalAmount, uint256 _rate, uint256 _duration) external{
-        require(msg.sender == IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT));
+        require(msg.sender == IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT), "Only governance contract is allowed to issue a treasury.");
+        // Increment treasury count, and define new treasury and its details (start date, total amount, rate, etc.)
         treasuryCount++;
         TreasuryDetails storage _treas = treasury[treasuryCount];
         _treas.dateStarted = block.timestamp;
