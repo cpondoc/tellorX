@@ -9,7 +9,8 @@ import "hardhat/console.sol";
 /**
  @author Tellor Inc.
  @title Treasury
- @dev This is the Treasury contract which defines the function for Tellor treasuries, or staking pools.
+ @dev This is the Treasury contract which defines the function for Tellor
+ * treasuries, or staking pools.
 */
 contract Treasury is TellorVars{
     // Storage
@@ -76,11 +77,10 @@ contract Treasury is TellorVars{
         IGovernance(msg.sender).delegate(_delegate);
     }
 
-    //_amount of TRB, _rate in bp
     /**
      * @dev This is an external function that is used to issue a new treasury.
      * Note that only the governance contract can call this function.
-     * @param _amount is the amount of total TRB that treasury stores
+     * @param _totalAmount is the amount of total TRB that treasury stores
      * @param _rate is the treasury's interest rate in BP
      * @param _duration is the amount of time the treasury locks participants
     */
