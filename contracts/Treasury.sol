@@ -140,7 +140,16 @@ contract Treasury is TellorVars{
         emit TreasuryPaid(_investor,_mintAmount + treas.accounts[_investor].amount);
     }
 
-    //Getters
+    // Getters
+    /**
+     * @dev This function returns the details of an account within a treasury.
+     * Note: refer to 'TreasuryUser' struct.
+     * @param _id is the ID of the treasury the account is stored in
+     * @param _investor is the address of the account in the treasury
+     * @return uint256 of the amount of TRB the account has staked in the treasury
+     * @return uint256 of the start vote count of when the account deposited money into the treasury
+     * @return bool of whether the treasury account has paid or not
+     */
     function getTreasuryAccount(uint256 _id, address _investor) external view returns(uint256, uint256, bool){
         return (
             treasury[_id].accounts[_investor].amount,
@@ -149,6 +158,10 @@ contract Treasury is TellorVars{
         );
     }
 
+    /**
+     * @dev This function returns the number of treasuries/TellorX staking pools.
+     * @return uint256 of the number of treasuries
+     */
     function getTreasuryCount() external view returns(uint256){
         return treasuryCount;
     }
@@ -157,18 +170,37 @@ contract Treasury is TellorVars{
         return(treasury[_id].dateStarted,treasury[_id].totalAmount,treasury[_id].rate,treasury[_id].purchased);
     }
 
+    /**
+     * @dev This function returns the amount of deposited by a user into treasuries.
+     * @param _user is the specific account within a treasury to look up
+     * @return uint256 of the amount of funds the user has, in TRB
+     */
     function getTreasuryFundsByUser(address _user) external view returns(uint256){
         return treasuryFundsByUser[_user];
     }
 
+    /**
+     * @dev This function returns the addresses of the owners of a treasury
+     * @param _id is the ID of a specific treasury
+     * @return address[] memory of the addresses of the owners of the treasury
+     */
     function getTreasuryOwners(uint256 _id) external view returns(address[] memory){
         return treasury[_id].owners;
     }
 
+    /**
+     * @dev This function is used during the upgrade process to verify valid Tellor Contracts
+    */
     function verify() external pure returns(uint){
         return 9999;
     }
 
+    /**
+     * @dev This function determines whether or not an investor in a treasury has paid/voted on Tellor governance proposals
+     * @param _id is the ID of the treasury the account is stored in
+     * @param _investor is the address of the account in the treasury
+     * @return bool of whether or not the investor has paid
+     */
     function wasPaid(uint256 _id, address _investor) external view returns(bool){
         return treasury[_id].accounts[_investor].paid;
     }
