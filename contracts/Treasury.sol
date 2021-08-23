@@ -6,6 +6,11 @@ import "./TellorVars.sol";
 import "./interfaces/IGovernance.sol";
 import "hardhat/console.sol";
 
+/**
+ @author Tellor Inc.
+ @title Treasury
+ @dev This is the Treasury contract which defines the function for Tellor treasuries, or staking pools.
+*/
 contract Treasury is TellorVars{
     // Storage
     uint256 public totalLocked; // amount of TRB locked across all treasuries
@@ -91,17 +96,23 @@ contract Treasury is TellorVars{
         emit TreasuryIssued(treasuryCount,_totalAmount,_rate);
     }
 
+    /**
+     * @dev This functions allows an investor to pay the treasury. Internally, the function calculates the number of 
+     votes in governance contract when issued, and also transfers the amount individually locked + interest to the investor.
+     * @param _id is the ID of the treasury the account is stored in
+     * @param _investor is the address of the account in the treasury 
+     */
     function payTreasury(address _investor,uint256 _id) external{
-        //calculate number of votes in governance contract when issued
+        // Validate ID of treasury, duration for treasury has not passed, and the user has not paid
         TreasuryDetails storage treas = treasury[_id];
-        require(_id <= treasuryCount);
+        require(_id <= treasuryCount, "ID does not correspond to a valid treasury.");
         require(treas.dateStarted + treas.duration <= block.timestamp);
         require(!treas.accounts[_investor].paid);
-        //calculate non-voting penalty (treasury holders have to vote)
+        // Calculate non-voting penalty (treasury holders have to vote)
         uint256 numVotesParticipated;
         uint256 votesSinceTreasury;
         address governanceContract = IController(TELLOR_ADDRESS).addresses(_GOVERNANCE_CONTRACT);
-        //Find endVoteCount if not already calculated
+        // Find endVoteCount if not already calculated
         if(!treas.endVoteCountRecorded) {
             uint256 voteCountIter = IGovernance(governanceContract).getVoteCount();
             if(voteCountIter > 0) {
@@ -116,7 +127,7 @@ contract Treasury is TellorVars{
             treas.endVoteCount = voteCountIter;
             treas.endVoteCountRecorded = true;
         }
-        //Add up number of votes _investor has participated in
+        // Add up number of votes _investor has participated in
         if(treas.endVoteCount > treas.accounts[_investor].startVoteCount){
             for(
                 uint256 voteCount = treas.accounts[_investor].startVoteCount;
@@ -130,6 +141,7 @@ contract Treasury is TellorVars{
                 votesSinceTreasury++;
             }
         }
+        // Determine amount of TRB to mint for interest
         uint256 _mintAmount = treas.accounts[_investor].amount * treas.rate/10000;
         if(votesSinceTreasury > 0){
             _mintAmount = _mintAmount *numVotesParticipated / votesSinceTreasury;
@@ -137,6 +149,7 @@ contract Treasury is TellorVars{
         if (_mintAmount > 0) {
             IController(TELLOR_ADDRESS).mint(address(this),_mintAmount);
         }
+        // Transfer locked amount + interest amount, and indicate user has paid
         totalLocked -= treas.accounts[_investor].amount;
         IController(TELLOR_ADDRESS).transfer(_investor,_mintAmount + treas.accounts[_investor].amount);
         treasuryFundsByUser[_investor] -= treas.accounts[_investor].amount;
