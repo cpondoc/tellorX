@@ -8,28 +8,32 @@ import "hardhat/console.sol";
 
 contract Treasury is TellorVars{
     // Storage
-    uint256 public totalLocked;
-    uint256 public treasuryCount;
-    mapping(uint => TreasuryDetails) public treasury;
-    mapping(address => uint256) treasuryFundsByUser;
+    uint256 public totalLocked; // amount of TRB locked across all treasuries
+    uint256 public treasuryCount; // number of total treasuries
+    mapping(uint => TreasuryDetails) public treasury; // maps an ID to a treasury and its corresponding details
+    mapping(address => uint256) treasuryFundsByUser; // maps a treasury investor to their total treasury funds, in TRB
 
+    // Structs
+    // Internal struct used to keep track of an individual user in a treasury
     struct TreasuryUser{
-        uint256 amount;
-        uint256 startVoteCount;
-        bool paid;
+        uint256 amount; // the amount the user has placed in a treasury, in TRB
+        uint256 startVoteCount; // the amount of votes that have been cast when a user deposits their money into a treasury
+        bool paid; // determines if a user has paid/voted in Tellor governance proposals
     }
+    // Internal struct used to keep track of a treasury and its pertinent attributes (amount, interest rate, etc.)
     struct TreasuryDetails{
-        uint256 dateStarted;
-        uint256 totalAmount;
-        uint256 rate;
-        uint256 purchased;
-        uint256 duration;
-        uint256 endVoteCount;
-        bool endVoteCountRecorded;
-        address[] owners;
-        mapping(address => TreasuryUser) accounts;
+        uint256 dateStarted; // the date that treasury was started
+        uint256 totalAmount; // the total amount stored in the treasury, in TRB
+        uint256 rate; // the interest rate of the treasury, in BP
+        uint256 purchased; // the amount of TRB purchased from the treasury
+        uint256 duration; // the time in which the treasury locks participants
+        uint256 endVoteCount; // the end vote count for when the treasury duration is over
+        bool endVoteCountRecorded; // determines if the vote count has been calculated or not
+        address[] owners; // the owners of the treasury
+        mapping(address => TreasuryUser) accounts; // a mapping of a treasury user address and corresponding details
     }
 
+    // Events
     event TreasuryIssued(uint256 _id,uint256 _amount,uint256 _rate);
     event TreasuryPaid(address _investor, uint256 _amount);
     event TreasuryPurchased(address _investor,uint256 _amount);
