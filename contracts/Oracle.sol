@@ -12,7 +12,7 @@ import "./TellorVars.sol";
 */
 contract Oracle is TellorVars{
     // Storage
-    uint256[] public timestamps; // array of all timestamps from reported values
+    uint256[] public timestamps; // array of timestamps from reported values
     mapping(bytes32 => uint256) public tips; // mapping of data IDs to the amount of TRB they are tipped
     uint256 public tipsInContract; // number of tips within the contract
     uint256 public timeOfLastNewValue = block.timestamp; // time of the last new value, originally set to the block timestamp
